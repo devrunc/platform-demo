@@ -1,0 +1,141 @@
+server:
+  # 应用服务 WEB 访问端口
+  port: 17879
+  undertow:
+    # 是否分配直接内存
+    direct-buffers: true
+    # post内容最大限制
+    max-http-post-size: 0
+    # buffer空间大小
+    buffer-size: 1024
+
+spring:
+  application:
+    # 应用名称
+    name: platform-demo
+  thymeleaf:
+    # 开启 MVC Thymeleaf 视图解析
+    enabled: true
+    # 开启模板缓存（默认值： true ）
+    cache: true
+    # 模板编码
+    encoding: UTF-8
+    # 在构建 URL 时添加到视图名称前的前缀
+    prefix: classpath:/templates/
+    # 在构建 URL 时添加到视图名称后的后缀
+    suffix: .html
+    # 检查模板是否存在，然后再呈现
+    check-template: true
+    # 检查模板位置是否正确（默认值 :true ）
+    check-template-location: true
+    #Content-Type 的值（默认值： text/html ）
+    servlet:
+      content-type: text/html
+
+#  redis:
+#    # Redis数据库索引
+#    database: 0
+#    # Redis服务器地址
+#    host: 127.0.0.1
+#    # Redis服务器连接端口
+#    port: 6379
+#    # Redis服务器连接密码（无密码为空）
+#    password: Qd_Zwy@2022
+#    # 连接超时时间（毫秒）
+#    timeout: 1000ms
+#    lettuce:
+#      pool:
+#        # 连接池最大连接数
+#        max-active: 200
+#        # 连接池最大阻塞等待时间（使用负值表示没有限制）
+#        max-wait: 15ms
+#        # 连接池中的最大空闲连接
+#        max-idle: 24
+#        # 连接池中的最小空闲连接
+#        min-idle: 3
+#
+#  kafka:
+#    # Kafka地址
+#    bootstrap-servers: 192.168.71.163:9093,192.168.71.48:9093,192.168.71.18:9093
+#    ssl:
+#      # 信任证书位置
+#      trust-store-location: file:/usr/local/client.truststore.jks
+#      # 信任证书密码
+#      trust-store-password: dms@kafka
+#    jaas:
+#      # 是否启用jaas
+#      enabled: true
+#      # 登录模块
+#      login-module: org.apache.kafka.common.security.plain.PlainLoginModule
+#      options:
+#        # 集成应用AK
+#        username: 58f8e9cb-7f0e-4048-9a05-d8349dc9ccd9
+#        # 集成应用SK
+#        password: gQ+b.4S3r$L35lDzqcJ66j-=#0@%0-K6D4tUau29Q4aU4RMkfc699H8f0s5!1#05
+#    security:
+#      # 安全协议
+#      protocol: SASL_SSL
+#    properties:
+#      sasl.mechanism: PLAIN
+#      ssl.endpoint.identification.algorithm: ''
+#    consumer:
+#      # 客户端标识
+#      client-id: 1
+#      # 消费组ID
+#      group-id: cn.running.demo.common.DEFAULT_GROUP_NAME
+#      # 序列化
+#      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+#      # 序列化
+#      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+#      # 是否自动提交offset
+#      enable-auto-commit: true
+#      # 重置为分区中最小的offset
+#      auto-offset-reset: latest
+#    producer:
+#      # 应答级别
+#      acks: 1
+#      # 重试次数
+#      retries: 3
+#      # 序列化
+#      key-serializer: org.apache.kafka.common.serialization.StringDeserializer
+#      # 序列化
+#      value-serializer: org.apache.kafka.common.serialization.StringDeserializer
+#
+#rocketmq:
+#  # rocketmq地址
+#  name-server: 15.48.95.212:8100;15.48.95.229:8100
+#  access-channel: LOCAL
+#  producer:
+#    group: YJ_JS_PARSE_ZIP_GROUP
+#    # 是否开启ssl
+#    tls-enable: true
+#    # ACL accessKey
+#    access-key: 3faf5278-dabc-40a3-ad62-68c8b61c1129
+#    # ACL secretKey
+#    secret-key: um5+7BP34V=q#6@z/baA-ik/!sVt-eJ72$%.fV.W7u9#Inq07.wqk02A0Ws.cO$R
+#    # 开启消费轨迹
+#    enable-msg-trace: true
+#  consumer:
+#    # 是否开启ssl
+#    tlsEnable: true
+#    # ACL accessKey
+#    access-key: 3faf5278-dabc-40a3-ad62-68c8b61c1129
+#    # ACL secretKey
+#    secret-key: um5+7BP34V=q#6@z/baA-ik/!sVt-eJ72$%.fV.W7u9#Inq07.wqk02A0Ws.cO$R
+#    pull-batch-size: 10
+#    # 开启消费轨迹
+#    enable-msg-trace: true
+#    # 消息模式：广播模式、集群模式
+#    message-model: CLUSTERING
+
+huawei:
+  # region0_id
+  region-id: jn-shujuyu-1
+  # external_global_domain_name
+  domain-name: sjy.vm.cloud.jns.sd
+  # Access Key
+  access-key: KDZ0SYLQT3YRSZPZBPVN
+  # Secret Access Key
+  secret-key: IJfACGnaKGn5EsecagRxpDuP1cxHQk8kZTl8RtDB
+  # 资源集id
+  project-id: b04ddff292eb4e2bbe0eca7d444e1376
