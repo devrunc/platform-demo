@@ -12,7 +12,9 @@ import com.huaweicloud.sdk.aom.v2.model.ListAgentsRequest;
 import com.huaweicloud.sdk.aom.v2.model.ListAgentsResponse;
 import com.huaweicloud.sdk.cce.v3.CceClient;
 import com.huaweicloud.sdk.cce.v3.model.*;
+import com.huaweicloud.sdk.core.HcClient;
 import com.huaweicloud.sdk.core.auth.BasicCredentials;
+import com.huaweicloud.sdk.core.auth.ICredential;
 import com.huaweicloud.sdk.core.http.HttpConfig;
 import com.huaweicloud.sdk.ges.v1.GesClient;
 import com.huaweicloud.sdk.ges.v1.model.ListGraphsRequest;
@@ -34,6 +36,7 @@ import com.obs.services.model.ObjectListing;
 import com.obs.services.model.ObsObject;
 import com.obs.services.model.PutObjectResult;
 import lombok.AllArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -44,6 +47,7 @@ import javax.annotation.PostConstruct;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.concurrent.ExecutionException;
 
 /**
  * 华为云SDK对接
@@ -67,14 +71,14 @@ public class HuaweiSdkApi {
      */
     private static final HttpConfig CONFIG = new HttpConfig()
             // 超时时间
-            .withTimeout(60)
+            .withTimeout(30)
             // 跳过SSL证书验证
             .withIgnoreSSLVerification(true);
 
     /**
      * 认证
      */
-    private static BasicCredentials BASIC_CREDENTIALS;
+    private static ICredential CREDENTIALS;
 
 
     /**
@@ -88,7 +92,7 @@ public class HuaweiSdkApi {
         SwrClient swrClient = SwrClient.newBuilder()
                 .withEndpoints(ListUtil.toList(endpoint))
                 .withHttpConfig(CONFIG)
-                .withCredential(BASIC_CREDENTIALS)
+                .withCredential(CREDENTIALS)
                 .build();
         // 请求创建命令空间
         CreateNamespaceResponse namespaceResponse = swrClient.createNamespace(new CreateNamespaceRequest()
@@ -117,7 +121,7 @@ public class HuaweiSdkApi {
         RomaClient romaClient = RomaClient.newBuilder()
                 .withEndpoints(ListUtil.toList(endpoint))
                 .withHttpConfig(CONFIG)
-                .withCredential(BASIC_CREDENTIALS)
+                .withCredential(CREDENTIALS)
                 .build();
         // 请求创建API分组
         CreateApiGroupV2Response apiGroupResponse = romaClient.createApiGroupV2(new CreateApiGroupV2Request()
@@ -151,7 +155,7 @@ public class HuaweiSdkApi {
         RomaClient romaClient = RomaClient.newBuilder()
                 .withEndpoints(ListUtil.toList(endpoint))
                 .withHttpConfig(CONFIG)
-                .withCredential(BASIC_CREDENTIALS)
+                .withCredential(CREDENTIALS)
                 .build();
         // 请求创建ROMA-MQS-Topic
         CreateProductTopicResponse topicResponse = romaClient.createProductTopic(new CreateProductTopicRequest()
@@ -174,7 +178,7 @@ public class HuaweiSdkApi {
         CceClient cceClient = CceClient.newBuilder()
                 .withEndpoints(ListUtil.toList(endpoint))
                 .withHttpConfig(CONFIG)
-                .withCredential(BASIC_CREDENTIALS)
+                .withCredential(CREDENTIALS)
                 .build();
         // 请求创建集群
         CreateClusterResponse clusterResponse = cceClient.createCluster(new CreateClusterRequest()
@@ -254,7 +258,7 @@ public class HuaweiSdkApi {
         GesClient gesClient = GesClient.newBuilder()
                 .withEndpoints(ListUtil.toList(endpoint))
                 .withHttpConfig(CONFIG)
-                .withCredential(BASIC_CREDENTIALS)
+                .withCredential(CREDENTIALS)
                 .build();
         // 请求查询图列表
         ListGraphsResponse listGraphsResponse = gesClient.listGraphs(new ListGraphsRequest());
@@ -274,7 +278,7 @@ public class HuaweiSdkApi {
         AomClient aomClient = AomClient.newBuilder()
                 .withEndpoints(ListUtil.toList(endpoint))
                 .withHttpConfig(CONFIG)
-                .withCredential(BASIC_CREDENTIALS)
+                .withCredential(CREDENTIALS)
                 .build();
         // 请求查询主机的ICAgent信息
         ListAgentsResponse agentsResponse = aomClient.listAgents(new ListAgentsRequest()
@@ -383,7 +387,7 @@ public class HuaweiSdkApi {
     @PostConstruct
     private void buildBasicCredentials() {
         // 初始化
-        BASIC_CREDENTIALS = new BasicCredentials()
+        CREDENTIALS = new BasicCredentials()
                 .withAk(properties.getAccessKey())
                 .withSk(properties.getSecretKey())
                 .withProjectId(properties.getProjectId());

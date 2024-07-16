@@ -246,8 +246,4 @@ public class HuaweiRomaApi {
 
     }
 
-    public static void main(String[] args) {
-
-    }
-
 }
