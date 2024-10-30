@@ -9,6 +9,7 @@ import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.client.Config;
+import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientBuilder;
 import lombok.AllArgsConstructor;
@@ -38,7 +39,8 @@ public class K8sApi {
      * build K8S client
      */
     private static final KubernetesClient CLIENT = new KubernetesClientBuilder()
-            .withConfig(Config.fromKubeconfig(FileUtil.readUtf8String("/tmp/k8s/kubeconfig.json")))
+//            .withConfig(Config.fromKubeconfig(FileUtil.readUtf8String("/tmp/k8s/kubeconfig.json")))
+            .withConfig(new ConfigBuilder().withMasterUrl("http://127.0.0.1:8001").build())
             .build();
 
     /**
@@ -59,31 +61,33 @@ public class K8sApi {
     @GetMapping("/createDeploy")
     public void createDeploy() {
         // 创建无状态工作负载
-        Deployment deployment = CLIENT.apps().deployments().inNamespace("default").resource(new DeploymentBuilder()
-                .withNewMetadata()
-                // Deploy名称
-                .withName("nginx-deploy")
-                // labels
-                .withLabels(MapUtil.of("app", "nginx-deploy"))
-                .endMetadata()
-                .withNewSpec()
-                // 副本数
-                .withReplicas(1)
-                .withNewTemplate()
-                .withNewSpec()
-                // 容器信息
-                .withContainers(new ContainerBuilder()
-                        .withName("nginx-container")
-                        .withImage(StrUtil.format("{}.{}.{}:nginx:1.23.2-alpine", CommonConstant.SWR_SERVICE_NAME, properties.getRegionId(), properties.getDomainName()))
-                        .withImagePullPolicy("IfNotPresent")
-                        .addNewPort()
-                        .withContainerPort(80)
-                        .endPort()
+        Deployment deployment = CLIENT.apps().deployments().inNamespace("me")
+                .resource(new DeploymentBuilder()
+                        .withNewMetadata()
+                        // Deploy名称
+                        .withName("test-deploy")
+                        // labels
+                        .withLabels(MapUtil.of("app", "test-deploy"))
+                        .endMetadata()
+                        .withNewSpec()
+                        // 副本数
+                        .withReplicas(1)
+                        .withNewTemplate()
+                        .withNewSpec()
+                        // 容器信息
+                        .withContainers(new ContainerBuilder()
+                                .withName("container1")
+                                .withImage(StrUtil.format("{}.{}.{}/images-group/nginx:1.23.2-alpine", CommonConstant.SWR_SERVICE_NAME, properties.getRegionId(), properties.getDomainName()))
+                                .withImagePullPolicy("IfNotPresent")
+                                .addNewPort()
+                                .withContainerPort(80)
+                                .endPort()
+                                .build())
+                        .endSpec()
+                        .endTemplate()
+                        .endSpec()
                         .build())
-                .endSpec()
-                .endTemplate()
-                .endSpec()
-                .build()).create();
+                .create();
         log.info(deployment.getStatus().toString());
     }
 }

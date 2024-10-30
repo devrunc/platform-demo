@@ -8,6 +8,8 @@ server:
     max-http-post-size: 0
     # buffer空间大小
     buffer-size: 1024
+  # 优雅停机
+  shutdown: graceful
 
 spring:
   application:
@@ -138,12 +140,12 @@ management:
 
 huawei:
   # region0_id
-  region-id: jn-shujuyu-1
+  region-id: cn-north-4
   # external_global_domain_name
-  domain-name: sjy.vm.cloud.jns.sd
+  domain-name: myhuaweicloud.com
   # Access Key
-  access-key: KDZ0SYLQT3YRSZPZBPVN
+  access-key: xxx
   # Secret Access Key
-  secret-key: IJfACGnaKGn5EsecagRxpDuP1cxHQk8kZTl8RtDB
+  secret-key: xxx
   # 资源集id
-  project-id: b04ddff292eb4e2bbe0eca7d444e1376
+  project-id: 0ec050af1580f3752f9cc000e3e394fb
