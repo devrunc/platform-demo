@@ -50,6 +50,11 @@ public interface CommonConstant {
      */
     String SWR_SERVICE_NAME = "swr";
 
+    /**
+     * VPC域名名称
+     */
+    String VPC_SERVICE_NAME = "vpc";
+
 
     /**
      * 默认topic名称

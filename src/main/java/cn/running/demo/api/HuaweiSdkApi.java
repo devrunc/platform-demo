@@ -1,9 +1,12 @@
 package cn.running.demo.api;
 
 import cn.hutool.core.collection.ListUtil;
+import cn.hutool.core.convert.Convert;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.IoUtil;
+import cn.hutool.core.net.NetUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.running.demo.common.CommonConstant;
 import cn.running.demo.properties.HuaweiProperties;
@@ -12,7 +15,6 @@ import com.huaweicloud.sdk.aom.v2.model.ListAgentsRequest;
 import com.huaweicloud.sdk.aom.v2.model.ListAgentsResponse;
 import com.huaweicloud.sdk.cce.v3.CceClient;
 import com.huaweicloud.sdk.cce.v3.model.*;
-import com.huaweicloud.sdk.core.HcClient;
 import com.huaweicloud.sdk.core.auth.BasicCredentials;
 import com.huaweicloud.sdk.core.auth.ICredential;
 import com.huaweicloud.sdk.core.http.HttpConfig;
@@ -31,12 +33,13 @@ import com.huaweicloud.sdk.swr.v2.SwrClient;
 import com.huaweicloud.sdk.swr.v2.model.CreateNamespaceRequest;
 import com.huaweicloud.sdk.swr.v2.model.CreateNamespaceRequestBody;
 import com.huaweicloud.sdk.swr.v2.model.CreateNamespaceResponse;
+import com.huaweicloud.sdk.vpc.v2.VpcClient;
+import com.huaweicloud.sdk.vpc.v2.model.*;
 import com.obs.services.ObsClient;
 import com.obs.services.model.ObjectListing;
 import com.obs.services.model.ObsObject;
 import com.obs.services.model.PutObjectResult;
 import lombok.AllArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -47,7 +50,7 @@ import javax.annotation.PostConstruct;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.concurrent.ExecutionException;
+import java.util.List;
 
 /**
  * 华为云SDK对接
@@ -369,6 +372,97 @@ public class HuaweiSdkApi {
         // 上传对象文件
         PutObjectResult result = obsClient.putObject(bucketName, "test.txt", FileUtil.file("C:\\123.txt"));
         return result.toString();
+    }
+
+    /**
+     * 创建VPC和批量创建子网
+     *
+     * @param vpcName     VPC名称
+     * @param ipv4A       ipv4前缀A类地址
+     * @param subnetCount 批量创建子网个数
+     */
+    @GetMapping("/createVpcAndSubnet")
+    public String createVpcAndSubnet(@RequestParam("name") String vpcName,
+                                     @RequestParam("ipv4A") int ipv4A,
+                                     @RequestParam("subnetCount") int subnetCount) {
+        if (subnetCount >= 3000) {
+            throw new RuntimeException("别太过分！");
+        }
+        // 构建完整URL
+        String endpoint = buildEndpoint(CommonConstant.VPC_SERVICE_NAME);
+        // build VPC Client
+        VpcClient client = VpcClient.newBuilder()
+                .withEndpoints(ListUtil.toList(endpoint))
+                .withHttpConfig(CONFIG)
+                .withCredential(CREDENTIALS)
+                .build();
+        String vpcCidr = StrUtil.format("{}.168.0.0/16", ipv4A);
+        // 创建VPC
+        CreateVpcResponse vpcResponse = client.createVpc(new CreateVpcRequest().withBody(new CreateVpcRequestBody()
+                .withVpc(new CreateVpcOption()
+                        .withName(vpcName)
+                        .withCidr(vpcCidr))));
+        String vpcId = vpcResponse.getVpc().getId();
+        if (StrUtil.isEmptyIfStr(vpcId)) {
+            throw new RuntimeException(StrUtil.format("{}，VPC创建失败", vpcCidr));
+        }
+        String[] cidr = vpcCidr.split("/");
+        // 原始网络地址
+        int originalMask = Convert.toInt(cidr[1]);
+        // 计算需要借用多少位来满足所需的子网数量
+        int borrowedBits = Convert.toInt(Math.ceil(Math.log(subnetCount) / Math.log(2)));
+        // 获取
+        long networkPart = NetUtil.ipv4ToLong(cidr[0]);
+        // 子网总数
+        int subnets = 1 << borrowedBits;
+        for (int i = 0; i < subnets; i++) {
+            // 计算每个子网的网络地址
+            long networkAddress = networkPart + Convert.toLong(i << (32 - (originalMask + borrowedBits)));
+            // 第一个可用主机地址
+            String firstUsableHost = NetUtil.longToIpv4(networkAddress + 1);
+            // 创建子网
+            CreateSubnetResponse subnetResponse = client.createSubnet(new CreateSubnetRequest()
+                    .withBody(new CreateSubnetRequestBody()
+                            .withSubnet(new CreateSubnetOption()
+                                    .withVpcId(vpcId)
+                                    .withGatewayIp(firstUsableHost)
+                                    .withName(StrUtil.format("subnet-{}", RandomUtil.randomString(8)))
+                                    .withCidr(StrUtil.format("{}/{}", NetUtil.longToIpv4(networkAddress), (originalMask + borrowedBits))))));
+            System.out.println(subnetResponse.toString());
+        }
+        return "success";
+    }
+
+    /**
+     * 删除VPC和以下所有子网
+     *
+     * @param vpcId vpcId
+     */
+    @GetMapping("/deleteVpcAndAllSubnet")
+    public String deleteVpcAndAllSubnet(@RequestParam("vpcId") String vpcId) {
+        // 构建完整URL
+        String endpoint = buildEndpoint(CommonConstant.VPC_SERVICE_NAME);
+        // build VPC Client
+        VpcClient client = VpcClient.newBuilder()
+                .withEndpoints(ListUtil.toList(endpoint))
+                .withHttpConfig(CONFIG)
+                .withCredential(CREDENTIALS)
+                .build();
+        while (Boolean.TRUE) {
+            // 查询VPC所属子网
+            List<Subnet> subnets = client.listSubnets(new ListSubnetsRequest().withVpcId(vpcId)).getSubnets();
+            if (subnets.isEmpty()) break;
+            subnets.forEach(subnet -> {
+                // 删除VPC所属子网
+                DeleteSubnetResponse deleteSubnetResponse = client.deleteSubnet(new DeleteSubnetRequest()
+                        .withVpcId(vpcId)
+                        .withSubnetId(subnet.getId()));
+                System.out.println(deleteSubnetResponse.toString());
+            });
+        }
+        // 删除VPC
+        DeleteVpcResponse deleteVpcResponse = client.deleteVpc(new DeleteVpcRequest().withVpcId(vpcId));
+        return deleteVpcResponse.toString();
     }
 
     /**
