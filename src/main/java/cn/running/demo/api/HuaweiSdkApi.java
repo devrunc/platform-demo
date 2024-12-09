@@ -40,6 +40,7 @@ import com.obs.services.model.ObjectListing;
 import com.obs.services.model.ObsObject;
 import com.obs.services.model.PutObjectResult;
 import lombok.AllArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -378,14 +379,14 @@ public class HuaweiSdkApi {
      * 创建VPC和批量创建子网
      *
      * @param vpcName     VPC名称
-     * @param ipv4A       ipv4前缀A类地址
+     * @param ipv4A       ipv4前缀A段地址
      * @param subnetCount 批量创建子网个数
      */
     @GetMapping("/createVpcAndSubnet")
-    public String createVpcAndSubnet(@RequestParam("name") String vpcName,
+    public String createVpcAndSubnet(@RequestParam("vpcName") String vpcName,
                                      @RequestParam("ipv4A") int ipv4A,
                                      @RequestParam("subnetCount") int subnetCount) {
-        if (subnetCount >= 3000) {
+        if (subnetCount >= 3000 || ipv4A <= 0 || ipv4A > 255) {
             throw new RuntimeException("别太过分！");
         }
         // 构建完整URL
@@ -415,7 +416,7 @@ public class HuaweiSdkApi {
         long networkPart = NetUtil.ipv4ToLong(cidr[0]);
         // 子网总数
         int subnets = 1 << borrowedBits;
-        for (int i = 0; i < subnets; i++) {
+        for (int i = 0; i <= subnetCount; i++) {
             // 计算每个子网的网络地址
             long networkAddress = networkPart + Convert.toLong(i << (32 - (originalMask + borrowedBits)));
             // 第一个可用主机地址

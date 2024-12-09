@@ -140,12 +140,12 @@ management:
 
 huawei:
   # region0_id
-  region-id: cn-north-4
+  region-id: ${REGION_ID:cn-north-4}
   # external_global_domain_name
-  domain-name: myhuaweicloud.com
+  domain-name: ${DOMAIN_NAME:myhuaweicloud.com}
   # Access Key
-  access-key: xxx
+  access-key: ${AK:xxx}
   # Secret Access Key
-  secret-key: xxx
+  secret-key: ${SK:xxx}
   # 资源集id
-  project-id: 0ec050af1580f3752f9cc000e3e394fb
+  project-id: ${PROJECT_ID:0ec050af1580f3752f9cc000e3e394fb}
